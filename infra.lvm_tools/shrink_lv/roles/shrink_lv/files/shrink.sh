@@ -1,4 +1,5 @@
 #!/bin/bash
+VOLUME_SIZE_ALIGNMENT=4096
 
 function get_device_name() {
     if [[ "$1" == "UUID="* ]]; then
@@ -15,7 +16,9 @@ function get_device_name() {
 }
 
 function ensure_size_in_bytes() {
-    /usr/bin/numfmt  --from iec "$1"
+    local expected_size=$(/usr/bin/numfmt  --from iec "$1")
+    let expected_size=(${expected_size} + $VOLUME_SIZE_ALIGNMENT)/$VOLUME_SIZE_ALIGNMENT*$VOLUME_SIZE_ALIGNMENT
+    echo $expected_size
 }
 
 function is_device_mounted() {
@@ -142,7 +145,7 @@ function process_entry() {
 }
 
 function display_help() {
-    echo "Program to shrink an ext4 file system hosted in a Logical Volume.
+    echo "Program to shrink ext4 file systems hosted in Logical Volumes.
 
     Usage: '$(basename "$0")' [-h] [-d=|--device=]
 
@@ -151,7 +154,8 @@ function display_help() {
     where:
         -h show this help text
         -d|--device= name or UUID of the device that holds an ext4 and the new size separated by a ':'
-                     for example /dev/my_group/my_vol:2G"
+                     for example /dev/my_group/my_vol:2G
+                     Sizes will be rounded to be 4K size aligned"
 }
 
 function parse_flags() {
